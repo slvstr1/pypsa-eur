@@ -165,7 +165,8 @@ def nuts3(country_shapes, nuts3, nuts3pop, nuts3gdp, ch_cantons, ch_popgdp):
     cantons = pd.read_csv(ch_cantons)
     cantons = cantons.set_index(cantons['HASC'].str[3:])['NUTS']
     cantons = cantons.str.pad(5, side='right', fillchar='0')
-
+    from icecream import ic
+    ic(ch_popgdp)
     swiss = pd.read_excel(ch_popgdp, skiprows=3, index_col=0)
     swiss.columns = swiss.columns.to_series().map(cantons)
 
