@@ -1,9 +1,24 @@
 # SPDX-FileCopyrightText: : 2017-2020 The PyPSA-Eur Authors
 #
 # SPDX-License-Identifier: MIT
+#  tmp = __import__('foo-bar')
 
+# import importlib
+
+from icecream import ic
+import os
 from os.path import normpath, exists
 from shutil import copyfile, move
+from os.path import exists
+
+
+# import SVK_edits
+# ic(os.getcwd(''))
+# ic(os.chdir('./'))
+# print(f"getcwd: {os.getcwd()}")
+# print(f"os.chdir: {os.chdir('/')}")
+# pypsa_eur =  __import__('./pypsa-eur')
+# from SVK_edits.local_switch import use_local_data_copies
 
 from snakemake.remote.HTTP import RemoteProvider as HTTPRemoteProvider
 HTTP = HTTPRemoteProvider()
@@ -13,6 +28,16 @@ if not exists("config.yaml"):
 
 configfile: "config.yaml"
 
+use_local_data_copies = config['use_local_data_copies']
+if use_local_data_copies:
+    local_data_copies_path= config['local_data_copies_path_name']
+#     local_data_copies_path = Path("local_data_copies")
+    directory_exists = os.path.isdir(local_data_copies_path)
+    if not directory_exists:
+        os.makedirs(local_data_copies_path)
+        log.info(f"The new directory {local_data_copies_path} has been created")
+
+COSTS="data/costs.csv"
 COSTS="resources/costs.csv"
 ATLITE_NPROCESSES = config['atlite'].get('nprocesses', 4)
 
@@ -48,10 +73,15 @@ if config['enable'].get('prepare_links_p_nom', False):
         script: 'scripts/prepare_links_p_nom.py'
 
 
-datafiles = ['ch_cantons.csv', 'je-e-21.03.02.xls', 
-            'eez/World_EEZ_v8_2014.shp', 
-            'hydro_capacities.csv', 'naturalearth/ne_10m_admin_0_countries.shp', 
-            'NUTS_2013_60M_SH/data/NUTS_RG_60M_2013.shp', 'nama_10r_3popgdp.tsv.gz', 
+# datafiles = ['ch_cantons.csv', 'je-e-21.03.02.xls',
+#             'eez/World_EEZ_v8_2014.shp', 'EIA_hydro_generation_2000_2014.csv',
+#             'hydro_capacities.csv', 'naturalearth/ne_10m_admin_0_countries.shp',
+#             'NUTS_2013_60M_SH/data/NUTS_RG_60M_2013.shp', 'nama_10r_3popgdp.tsv.gz',
+
+datafiles = ['ch_cantons.csv', 'je-e-21.03.02.xls',
+            'eez/World_EEZ_v8_2014.shp',
+            'hydro_capacities.csv', 'naturalearth/ne_10m_admin_0_countries.shp',
+            'NUTS_2013_60M_SH/data/NUTS_RG_60M_2013.shp', 'nama_10r_3popgdp.tsv.gz',
             'nama_10r_3gdp.tsv.gz', 'corine/g250_clc06_V18_5.tif']
 
 
@@ -66,10 +96,51 @@ if config['enable'].get('retrieve_databundle', True):
         script: 'scripts/retrieve_databundle.py'
 
 
+path_to_file= os.path.join(local_data_copies_path, "Natura2000_end2020.gpkg")
+file_exists = exists(path_to_file)
+if not use_local_data_copies or not file_exists:
+#     print("retrieve_natura_datawr")
+    rule retrieve_natura_data:
+        input: HTTP.remote("sdi.eea.europa.eu/datashare/s/H6QGCybMdLLnywo/download", additional_request_string="?path=%2FNatura2000_end2020_gpkg&files=Natura2000_end2020.gpkg", static=True)
+        output: "data/Natura2000_end2020.gpkg"
+        log: "logs/retrieve_natura_data.log"
+        run:
+            move(input[0], output[0])
+            if use_local_data_copies:
+                copyfile(input[0], path_to_file)
+
+else:
+    print(f"retrieve_natura_data locally from {path_to_file}")
+    rule retrieve_natura_data:
+        input: path_to_file
+        output: "data/Natura2000_end2020.gpkg"
+        log: "logs/retrieve_natura_data.log"
+        run:
+            copyfile(input[0], output[0])
+
+
+
+
+path_to_file= os.path.join(local_data_copies_path, "time_series_60min_singleindex.csv")
+file_exists = exists(path_to_file)
+if not config['use_local_data_copies'] or not file_exists:
+    rule retrieve_load_data:
 rule retrieve_load_data:
     input: HTTP.remote("data.open-power-system-data.org/time_series/2019-06-05/time_series_60min_singleindex.csv", keep_local=True, static=True)
     output: "data/load_raw.csv"
-    run: move(input[0], output[0])
+    log: "logs/retrieve_load_data.log"
+    run:   move(input[0], output[0])
+    if use_local_data_copies:
+        copyfile(input[0], path_to_file)
+else:
+    print(f"retrieve_natura_data locally from {path_to_file}")
+    rule retrieve_load_data:
+        input: path_to_file
+        output: "data/load_raw.csv"
+        log: "logs/retrieve_load_data.log"
+        run:
+            copyfile(input[0], output[0])
+
 
 
 rule build_load_data:
@@ -77,6 +148,7 @@ rule build_load_data:
     output: "resources/load.csv"
     log: "logs/build_load_data.log"
     script: 'scripts/build_load_data.py'
+
 
 rule build_powerplants:
     input:
@@ -143,9 +215,10 @@ rule build_bus_regions:
     resources: mem_mb=1000
     script: "scripts/build_bus_regions.py"
 
+
 if config['enable'].get('build_cutout', False):
     rule build_cutout:
-        input: 
+        input:
             regions_onshore="resources/regions_onshore.geojson",
             regions_offshore="resources/regions_offshore.geojson"
         output: "cutouts/{cutout}.nc"
@@ -157,6 +230,22 @@ if config['enable'].get('build_cutout', False):
 
 
 if config['enable'].get('retrieve_cutout', True):
+    path_to_file= os.path.join(local_data_copies_path, "{cutout}.nc")
+    file_exists = exists(path_to_file)
+    if not use_local_data_copies or not file_exists:
+        rule retrieve_cutout:
+            input: HTTP.remote("zenodo.org/record/6382570/files/{cutout}.nc", keep_local=True, static=True)
+            output: "cutouts/{cutout}.nc"
+            run: move(input[0], output[0])
+    else:
+        rule retrieve_cutout:
+            input: path_to_file
+            output: "cutouts/{cutout}.nc"
+            run:
+                copyfile(input[0], output[0])
+                if use_local_data_copies:
+                    copyfile(input[0], path_to_file)
+
     rule retrieve_cutout:
         input: HTTP.remote("zenodo.org/record/6382570/files/{cutout}.nc", keep_local=True, static=True)
         output: "cutouts/{cutout}.nc"
@@ -209,6 +298,30 @@ rule build_renewable_profiles:
     wildcard_constraints: technology="(?!hydro).*" # Any technology other than hydro
     script: "scripts/build_renewable_profiles.py"
 
+# rule build_renewable_profiles:
+#     input:
+#         base_network="networks/base.nc",
+#         corine="data/bundle/corine/g250_clc06_V18_5.tif",
+#         natura=lambda w: ("data/Natura2000_end2020.gpkg"
+#                           if config["renewable"][w.technology]["natura"]
+#                           else []),
+#         gebco=lambda w: ("data/bundle/GEBCO_2014_2D.nc"
+#                          if "max_depth" in config["renewable"][w.technology].keys()
+#                          else []),
+#         country_shapes='resources/country_shapes.geojson',
+#         offshore_shapes='resources/offshore_shapes.geojson',
+#         regions=lambda w: ("resources/regions_onshore.geojson"
+#                                    if w.technology in ('onwind', 'solar')
+#                                    else "resources/regions_offshore.geojson"),
+#         cutout=lambda w: "cutouts/" + config["renewable"][w.technology]['cutout'] + ".nc"
+#     output: profile="resources/profile_{technology}.nc",
+#     log: "logs/build_renewable_profile_{technology}.log"
+#     benchmark: "benchmarks/build_renewable_profiles_{technology}"
+#     threads: ATLITE_NPROCESSES
+#     resources: mem_mb=ATLITE_NPROCESSES * 5000
+#     wildcard_constraints: technology="(?!hydro).*" # Any technology other than hydro
+#     script: "scripts/build_renewable_profiles.py"
+
 
 rule build_hydro_profile:
     input:
@@ -233,7 +346,7 @@ rule add_electricity:
         nuts3_shapes='resources/nuts3_shapes.geojson',
         **{f"profile_{tech}": f"resources/profile_{tech}.nc"
            for tech in config['renewable']},
-        **{f"conventional_{carrier}_{attr}": fn for carrier, d in config.get('conventional', {None: {}}).items() for attr, fn in d.items() if str(fn).startswith("data/")}, 
+        **{f"conventional_{carrier}_{attr}": fn for carrier, d in config.get('conventional', {None: {}}).items() for attr, fn in d.items() if str(fn).startswith("data/")},
     output: "networks/elec.nc"
     log: "logs/add_electricity.log"
     benchmark: "benchmarks/add_electricity"

@@ -197,7 +197,19 @@ if __name__ == "__main__":
                                   simpl='', clusters=5)
     configure_logging(snakemake)
 
+    # SVK: here something goes wrong...
+    # probably means that the network doesnt work properly
+    from icecream import ic
+    ic.enable()
+    ic(type(snakemake.input.network))
+    ic(snakemake.input.network)
+    # ic(snakemake.input.network.fillna(0))
+    # q=snakemake.input.network.fillna(0)
+    # n= pypsa.Network(q)
+    # ic(n)
     n = pypsa.Network(snakemake.input.network)
+    print(f"n: {n}")
+    ic(n)
     elec_config = snakemake.config['electricity']
     
     Nyears = n.snapshot_weightings.objective.sum() / 8760.
