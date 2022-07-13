@@ -214,7 +214,7 @@ load:
 
 costs:
   year: 2030
-  version: v0.1.0
+  version: v0.4.0
   rooftop_share: 0.14  # based on the potentials, assuming  (0.1 kW/m2 and 10 m2/person)
   fill_values:
     FOM: 0
