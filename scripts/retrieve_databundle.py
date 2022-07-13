@@ -82,8 +82,6 @@ if __name__ == "__main__":
 
     if snakemake.config['tutorial']:
         url = "https://zenodo.org/record/3517921/files/pypsa-eur-tutorial-data-bundle.tar.xz"
-        progress_retrieve(url, tarball_fn)
-
     else:
 
         # SVK edits start
