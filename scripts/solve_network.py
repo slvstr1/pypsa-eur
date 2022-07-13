@@ -89,6 +89,7 @@ from pypsa.linopf import (get_var, define_constraints, linexpr, join_exprs,
 
 from pathlib import Path
 from vresutils.benchmark import memory_logger
+from icecream import ic
 
 logger = logging.getLogger(__name__)
 
@@ -244,7 +245,10 @@ def extra_functionality(n, snapshots):
 
 def solve_network(n, config, opts='', **kwargs):
     solver_options = config['solving']['solver'].copy()
+
     solver_name = solver_options.pop('name')
+
+
     cf_solving = config['solving']['options']
     track_iterations = cf_solving.get('track_iterations', False)
     min_iterations = cf_solving.get('min_iterations', 4)
@@ -253,6 +257,9 @@ def solve_network(n, config, opts='', **kwargs):
     # add to network for extra_functionality
     n.config = config
     n.opts = opts
+
+    ic(solver_options)
+    solver_options = {}
 
     skip_iterations = cf_solving.get('skip_iterations', False)
     if not n.lines.s_nom_extendable.any():
@@ -288,8 +295,11 @@ if __name__ == "__main__":
     with memory_logger(filename=fn, interval=30.) as mem:
         n = pypsa.Network(snakemake.input[0])
         n = prepare_network(n, solve_opts)
+        ic.enable()
+        ic(n)
         n = solve_network(n, snakemake.config, opts, solver_dir=tmpdir,
                           solver_logfile=snakemake.log.solver)
+        ic(n)
         n.export_to_netcdf(snakemake.output[0])
 
     logger.info("Maximum memory usage: {}".format(mem.mem_usage))
