@@ -106,6 +106,7 @@ def prepare_network(n, solve_opts):
         n.add("Carrier", "load", color="#dd2e23", nice_name="Load shedding")
         buses_i = n.buses.query("carrier == 'AC'").index
         if not np.isscalar(load_shedding): load_shedding = 1e2 # Eur/kWh
+        # voll = 100e/kwH = 1000E/mWh -> seems low
         # intersect between macroeconomic and surveybased
         # willingness to pay
         # http://journal.frontiersin.org/article/10.3389/fenrg.2015.00055/full)
@@ -113,7 +114,7 @@ def prepare_network(n, solve_opts):
                bus=buses_i,
                carrier='load',
                sign=1e-3, # Adjust sign to measure p and p_nom in kW instead of MW
-               marginal_cost=load_shedding, 
+               marginal_cost=load_shedding,
                p_nom=1e9 # kW
                )
 
@@ -216,13 +217,13 @@ def add_SAFE_constraints(n, config):
 
 
 def add_operational_reserve_margin_constraint(n, config):
-    
+
     reserve_config = config["electricity"]["operational_reserve"]
     EPSILON_LOAD = reserve_config["epsilon_load"]
     EPSILON_VRES = reserve_config["epsilon_vres"]
     CONTINGENCY = reserve_config["contingency"]
 
-    # Reserve Variables 
+    # Reserve Variables
     reserve = get_var(n, 'Generator', 'r')
     lhs = linexpr((1, reserve)).sum(1)
 
@@ -236,15 +237,15 @@ def add_operational_reserve_margin_constraint(n, config):
 
     # Total demand at t
     demand =  n.loads_t.p.sum(1)
-    
+
     # VRES potential of non extendable generators
     capacity_factor = n.generators_t.p_max_pu[vres_i.difference(ext_i)]
     renewable_capacity = n.generators.p_nom[vres_i.difference(ext_i)]
     potential = (capacity_factor * renewable_capacity).sum(1)
-    
+
     # Right-hand-side
     rhs = EPSILON_LOAD * demand + EPSILON_VRES * potential + CONTINGENCY
-        
+
     define_constraints(n, lhs, '>=', rhs, "Reserve margin")
 
 
@@ -255,32 +256,32 @@ def update_capacity_constraint(n):
 
     dispatch = get_var(n, 'Generator', 'p')
     reserve = get_var(n, 'Generator', 'r')
-        
+
     capacity_fixed = n.generators.p_nom[fix_i]
-    
+
     p_max_pu = get_as_dense(n, 'Generator', 'p_max_pu')
-    
+
     lhs = linexpr((1, dispatch), (1, reserve))
-    
+
     if not ext_i.empty:
         capacity_variable = get_var(n, 'Generator', 'p_nom')
         lhs += linexpr((-p_max_pu[ext_i], capacity_variable)).reindex(columns=gen_i, fill_value='')
-    
+
     rhs = (p_max_pu[fix_i] * capacity_fixed).reindex(columns=gen_i, fill_value=0)
-    
+
     define_constraints(n, lhs, '<=', rhs, 'Generators', 'updated_capacity_constraint')
 
 
 def add_operational_reserve_margin(n, sns, config):
     """
-    Build reserve margin constraints based on the formulation given in 
+    Build reserve margin constraints based on the formulation given in
     https://genxproject.github.io/GenX/dev/core/#Reserves.
     """
 
     define_variables(n, 0, np.inf, 'Generator', 'r', axes=[sns, n.generators.index])
 
     add_operational_reserve_margin_constraint(n, config)
-    
+
     update_capacity_constraint(n)
 
 
@@ -320,7 +321,10 @@ def extra_functionality(n, snapshots):
 
 def solve_network(n, config, opts='', **kwargs):
     solver_options = config['solving']['solver'].copy()
+
     solver_name = solver_options.pop('name')
+
+
     cf_solving = config['solving']['options']
     track_iterations = cf_solving.get('track_iterations', False)
     min_iterations = cf_solving.get('min_iterations', 4)
@@ -372,6 +376,7 @@ if __name__ == "__main__":
         n = solve_network(n, snakemake.config, opts, solver_dir=tmpdir,
                           solver_logfile=snakemake.log.solver)
         ic(n)
+
         n.meta = dict(snakemake.config, **dict(wildcards=dict(snakemake.wildcards)))
         n.export_to_netcdf(snakemake.output[0])
 

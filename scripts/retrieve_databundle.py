@@ -44,7 +44,7 @@ logger = logging.getLogger(__name__)
 
 # from .SVK_edits
 # from local_switch import use_local_data_copies
-
+use_local_data_copies = True
 # print(use_local_data_copies)
 if __name__ == "__main__":
     if 'snakemake' not in globals():
@@ -54,6 +54,7 @@ if __name__ == "__main__":
     else:
         rootpath = '.'
     configure_logging(snakemake) # TODO Make logging compatible with progressbar (see PR #102)
+
 
     use_local_data_copies = snakemake.config['use_local_data_copies']
     local_data_copies_path= snakemake.config['local_data_copies_path_name']
@@ -68,6 +69,13 @@ if __name__ == "__main__":
         progress_retrieve(url, tarball_fn)
 
     else:
+
+        # SVK edits start
+
+
+
+
+
 
         # SVK edits start
 
