@@ -2,6 +2,10 @@
 #
 # SPDX-License-Identifier: MIT
 
+# import importlib
+
+from icecream import ic
+import os
 from os.path import normpath, exists
 from shutil import copyfile, move
 
@@ -22,6 +26,16 @@ CDIR = RDIR if not run.get("shared_cutouts") else ""
 
 COSTS = "resources/" + RDIR + "costs.csv"
 ATLITE_NPROCESSES = config["atlite"].get("nprocesses", 4)
+
+use_local_data_copies = config['use_local_data_copies']
+if use_local_data_copies:
+    local_data_copies_path= config['local_data_copies_path_name']
+#     local_data_copies_path = Path("local_data_copies")
+    directory_exists = os.path.isdir(local_data_copies_path)
+    if not directory_exists:
+        os.makedirs(local_data_copies_path)
+        log.info(f"The new directory {local_data_copies_path} has been created")
+
 
 
 wildcard_constraints:
@@ -103,19 +117,58 @@ if config["enable"].get("retrieve_databundle", True):
             "scripts/retrieve_databundle.py"
 
 
-rule retrieve_load_data:
-    input:
-        HTTP.remote(
-            "data.open-power-system-data.org/time_series/2019-06-05/time_series_60min_singleindex.csv",
-            keep_local=True,
-            static=True,
-        ),
-    output:
-        "data/load_raw.csv",
-    resources:
-        mem_mb=5000,
-    run:
-        move(input[0], output[0])
+# path_to_file= os.path.join(local_data_copies_path, "Natura2000_end2020.gpkg")
+# file_exists = exists(path_to_file)
+# if not use_local_data_copies or not file_exists:
+# #     print("retrieve_natura_datawr")
+#     rule retrieve_natura_data:
+#         input: HTTP.remote("sdi.eea.europa.eu/datashare/s/H6QGCybMdLLnywo/download", additional_request_string="?path=%2FNatura2000_end2020_gpkg&files=Natura2000_end2020.gpkg", static=True)
+#         output: "data/Natura2000_end2020.gpkg"
+#         log: "logs/retrieve_natura_data.log"
+#         run:
+#             move(input[0], output[0])
+#             if use_local_data_copies:
+#                 copyfile(input[0], path_to_file)
+#
+# else:
+#     print(f"retrieve_natura_data locally from {path_to_file}")
+#     rule retrieve_natura_data:
+#         input: path_to_file
+#         output: "data/Natura2000_end2020.gpkg"
+#         log: "logs/retrieve_natura_data.log"
+#         run:
+#             copyfile(input[0], output[0])
+
+
+
+
+path_to_file= os.path.join(local_data_copies_path, "time_series_60min_singleindex.csv")
+file_exists = exists(path_to_file)
+if not config['use_local_data_copies'] or not file_exists:
+    rule retrieve_load_data:
+        input:
+            HTTP.remote(
+                "data.open-power-system-data.org/time_series/2019-06-05/time_series_60min_singleindex.csv",
+                keep_local=True,
+                static=True,
+            ),
+        output:
+            "data/load_raw.csv",
+        resources:
+            mem_mb=5000,
+        run:
+            move(input[0], output[0])
+        if use_local_data_copies:
+            copyfile(input[0], path_to_file)
+else:
+    print(f"retrieve_natura_data locally from {path_to_file}")
+    rule retrieve_load_data:
+        input: path_to_file
+        output: "data/load_raw.csv"
+        log: "logs/retrieve_load_data.log"
+        run:
+            copyfile(input[0], output[0])
+
 
 
 rule build_load_data:
@@ -231,23 +284,35 @@ if config["enable"].get("build_cutout", False):
             "scripts/build_cutout.py"
 
 
-if config["enable"].get("retrieve_cutout", True):
+if config['enable'].get('retrieve_cutout', True):
+    path_to_file= os.path.join(local_data_copies_path, "{cutout}.nc")
+    file_exists = exists(path_to_file)
+    if not use_local_data_copies or not file_exists:
+        rule retrieve_cutout:
+                input:
+                    HTTP.remote(
+                        "zenodo.org/record/6382570/files/{cutout}.nc",
+                        keep_local=True,
+                        static=True,
+                    ),
+                output:
+                    "cutouts/" + CDIR + "{cutout}.nc",
+                log:
+                    "logs/" + CDIR + "retrieve_cutout_{cutout}.log",
+                resources:
+                    mem_mb=5000,
+                run:
+                    move(input[0], output[0])
+    else:
+        rule retrieve_cutout:
+            input: path_to_file
+            output: "cutouts/{cutout}.nc"
+            run:
+                copyfile(input[0], output[0])
+                if use_local_data_copies:
+                    copyfile(input[0], path_to_file)
 
-    rule retrieve_cutout:
-        input:
-            HTTP.remote(
-                "zenodo.org/record/6382570/files/{cutout}.nc",
-                keep_local=True,
-                static=True,
-            ),
-        output:
-            "cutouts/" + CDIR + "{cutout}.nc",
-        log:
-            "logs/" + CDIR + "retrieve_cutout_{cutout}.log",
-        resources:
-            mem_mb=5000,
-        run:
-            move(input[0], output[0])
+
 
 
 if config["enable"].get("retrieve_cost_data", True):
@@ -332,49 +397,49 @@ rule build_ship_raster:
         "scripts/build_ship_raster.py"
 
 
-rule build_renewable_profiles:
-    input:
-        base_network="networks/" + RDIR + "base.nc",
-        corine="data/bundle/corine/g250_clc06_V18_5.tif",
-        natura=lambda w: (
-            "resources/" + RDIR + "natura.tiff"
-            if config["renewable"][w.technology]["natura"]
-            else []
-        ),
-        gebco=lambda w: (
-            "data/bundle/GEBCO_2014_2D.nc"
-            if "max_depth" in config["renewable"][w.technology].keys()
-            else []
-        ),
-        ship_density=lambda w: (
-            "resources/" + RDIR + "shipdensity_raster.nc"
-            if "ship_threshold" in config["renewable"][w.technology].keys()
-            else []
-        ),
-        country_shapes="resources/" + RDIR + "country_shapes.geojson",
-        offshore_shapes="resources/" + RDIR + "offshore_shapes.geojson",
-        regions=lambda w: (
-            "resources/" + RDIR + "regions_onshore.geojson"
-            if w.technology in ("onwind", "solar")
-            else "resources/" + RDIR + "regions_offshore.geojson"
-        ),
-        cutout=lambda w: "cutouts/"
-        + CDIR
-        + config["renewable"][w.technology]["cutout"]
-        + ".nc",
-    output:
-        profile="resources/" + RDIR + "profile_{technology}.nc",
-    log:
-        "logs/" + RDIR + "build_renewable_profile_{technology}.log",
-    benchmark:
-        "benchmarks/" + RDIR + "build_renewable_profiles_{technology}"
-    threads: ATLITE_NPROCESSES
-    resources:
-        mem_mb=ATLITE_NPROCESSES * 5000,
-    wildcard_constraints:
-        technology="(?!hydro).*",  # Any technology other than hydro
-    script:
-        "scripts/build_renewable_profiles.py"
+# rule build_renewable_profiles:
+#     input:
+#         base_network="networks/" + RDIR + "base.nc",
+#         corine="data/bundle/corine/g250_clc06_V18_5.tif",
+#         natura=lambda w: (
+#             "resources/" + RDIR + "natura.tiff"
+#             if config["renewable"][w.technology]["natura"]
+#             else []
+#         ),
+#         gebco=lambda w: (
+#             "data/bundle/GEBCO_2014_2D.nc"
+#             if "max_depth" in config["renewable"][w.technology].keys()
+#             else []
+#         ),
+#         ship_density=lambda w: (
+#             "resources/" + RDIR + "shipdensity_raster.nc"
+#             if "ship_threshold" in config["renewable"][w.technology].keys()
+#             else []
+#         ),
+#         country_shapes="resources/" + RDIR + "country_shapes.geojson",
+#         offshore_shapes="resources/" + RDIR + "offshore_shapes.geojson",
+#         regions=lambda w: (
+#             "resources/" + RDIR + "regions_onshore.geojson"
+#             if w.technology in ("onwind", "solar")
+#             else "resources/" + RDIR + "regions_offshore.geojson"
+#         ),
+#         cutout=lambda w: "cutouts/"
+#         + CDIR
+#         + config["renewable"][w.technology]["cutout"]
+#         + ".nc",
+#     output:
+#         profile="resources/" + RDIR + "profile_{technology}.nc",
+#     log:
+#         "logs/" + RDIR + "build_renewable_profile_{technology}.log",
+#     benchmark:
+#         "benchmarks/" + RDIR + "build_renewable_profiles_{technology}"
+#     threads: ATLITE_NPROCESSES
+#     resources:
+#         mem_mb=ATLITE_NPROCESSES * 5000,
+#     wildcard_constraints:
+#         technology="(?!hydro).*",  # Any technology other than hydro
+#     script:
+#         "scripts/build_renewable_profiles.py"
 
 
 rule build_hydro_profile:

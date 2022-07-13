@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2019-2022 Fabian Hofmann (TUB, FIAS)
 # SPDX-FileCopyrightText: : 2017-2022 The PyPSA-Eur Authors
 #
@@ -40,7 +39,7 @@ from pathlib import Path
 from _helpers import configure_logging, progress_retrieve
 
 logger = logging.getLogger(__name__)
-
+use_local_data_copies = True
 
 if __name__ == "__main__":
     if "snakemake" not in globals():
@@ -59,12 +58,30 @@ if __name__ == "__main__":
     else:
         url = "https://zenodo.org/record/3517935/files/pypsa-eur-data-bundle.tar.xz"
 
-    # Save locations
     tarball_fn = Path(f"{rootpath}/bundle.tar.xz")
     to_fn = Path(f"{rootpath}/data")
 
+    if use_local_data_copies:
+        # tarball_fn= Path(f"{rootpath}/local_data_copies/pypsa-eur-data-bundle.tar.xz")
+        tarball_fn = Path("local_data_copies/pypsa-eur-data-bundle.tar.xz")
+        url = tarball_fn
+        logger.info(f"Getting databundle locally from '{url}'.")
+        # progress_retrieve(url, tarball_fn)
+
+    else:
+        url = "https://zenodo.org/record/3517935/files/pypsa-eur-data-bundle.tar.xz"
+        progress_retrieve(url, tarball_fn)
+        logger.info(f"Downloading databundle from '{url}'.")
+    # Save locations
+
+
     logger.info(f"Downloading databundle from '{url}'.")
     progress_retrieve(url, tarball_fn)
+
+
+
+
+
 
     logger.info(f"Extracting databundle.")
     tarfile.open(tarball_fn).extractall(to_fn)
