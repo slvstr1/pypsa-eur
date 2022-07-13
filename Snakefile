@@ -133,8 +133,11 @@ if config["enable"].get("retrieve_databundle", True):
             "scripts/retrieve_databundle.py"
 
 
-# path_to_file= os.path.join(local_data_copies_path, "Natura2000_end2020.gpkg")
-# file_exists = exists(path_to_file)
+"""
+Apparently not used anymore in the upstream
+"""
+# path_to_local_file= os.path.join(local_data_copies_path, "Natura2000_end2020.gpkg")
+# file_exists = exists(path_to_local_file)
 # if not use_local_data_copies or not file_exists:
 # #     print("retrieve_natura_datawr")
 #     rule retrieve_natura_data:
@@ -154,7 +157,6 @@ if config["enable"].get("retrieve_databundle", True):
 #         log: "logs/retrieve_natura_data.log"
 #         run:
 #             copyfile(input[0], output[0])
-
 
 
 
@@ -461,7 +463,7 @@ rule build_ship_raster:
 #     script:
 #         "scripts/build_renewable_profiles.py"
 
-
+# HAVE THIS IN LOCAL FILES? data/eia_hydro_annual_generation.csv
 rule build_hydro_profile:
     input:
         country_shapes="resources/" + RDIR + "country_shapes.geojson",
