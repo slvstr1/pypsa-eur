@@ -66,6 +66,30 @@ import atlite
 import geopandas as gpd
 from vresutils import hydro as vhydro
 from icecream import ic
+import pandas as pd
+
+import country_converter as coco
+cc = coco.CountryConverter()
+
+
+def get_eia_annual_hydro_generation(fn, countries):
+
+    # in billion kWh/a = TWh/a
+    df = pd.read_csv(fn, skiprows=2, index_col=1, na_values=[u' ','--']).iloc[1:, 1:]
+    df.index = df.index.str.strip()
+
+    df.loc["Germany"] = df.filter(like='Germany', axis=0).sum()
+    df.loc["Serbia"] += df.loc["Kosovo"]
+    df = df.loc[~df.index.str.contains('Former')]
+    df.drop(["Europe", "Germany, West", "Germany, East"], inplace=True)
+
+    df.index = cc.convert(df.index, to='iso2')
+    df.index.name = 'countries'
+
+    df = df.T[countries] * 1e6  # in MWh/a
+
+    return df
+
 
 logger = logging.getLogger(__name__)
 
@@ -83,8 +107,9 @@ if __name__ == "__main__":
                       .set_index('name')['geometry'].reindex(countries))
     country_shapes.index.name = 'countries'
 
-    eia_stats = vhydro.get_eia_annual_hydro_generation(
-        snakemake.input.eia_hydro_generation).reindex(columns=countries)
+    fn = snakemake.input.eia_hydro_generation
+    eia_stats = get_eia_annual_hydro_generation(fn, countries)
+
     inflow = cutout.runoff(shapes=country_shapes,
                            smooth=True,
                            lower_threshold_quantile=True,
@@ -92,6 +117,5 @@ if __name__ == "__main__":
 
     if 'clip_min_inflow' in config_hydro:
         inflow = inflow.where(inflow > config_hydro['clip_min_inflow'], 0)
-    ic.enable()
-    ic(snakemake.output[0])
+
     inflow.to_netcdf(snakemake.output[0])
