@@ -37,10 +37,15 @@ from _helpers import progress_retrieve, configure_logging
 
 import tarfile
 from pathlib import Path
+import os
+from shutil import copyfile
 
 logger = logging.getLogger(__name__)
 
+# from .SVK_edits
+# from local_switch import use_local_data_copies
 
+# print(use_local_data_copies)
 if __name__ == "__main__":
     if 'snakemake' not in globals():
         from _helpers import mock_snakemake
@@ -50,21 +55,52 @@ if __name__ == "__main__":
         rootpath = '.'
     configure_logging(snakemake) # TODO Make logging compatible with progressbar (see PR #102)
 
-    if snakemake.config['tutorial']:
-        url = "https://zenodo.org/record/3517921/files/pypsa-eur-tutorial-data-bundle.tar.xz"
-    else:
-        url = "https://zenodo.org/record/3517935/files/pypsa-eur-data-bundle.tar.xz"
+    use_local_data_copies = snakemake.config['use_local_data_copies']
+    local_data_copies_path= snakemake.config['local_data_copies_path_name']
 
     # Save locations
     tarball_fn = Path(f"{rootpath}/bundle.tar.xz")
     to_fn = Path(f"{rootpath}/data")
 
-    logger.info(f"Downloading databundle from '{url}'.")
-    progress_retrieve(url, tarball_fn)
+
+    if snakemake.config['tutorial']:
+        url = "https://zenodo.org/record/3517921/files/pypsa-eur-tutorial-data-bundle.tar.xz"
+        progress_retrieve(url, tarball_fn)
+
+    else:
+
+        # SVK edits start
+
+        path_to_local_file = os.path.join(local_data_copies_path, "pypsa-eur-data-bundle.tar.xz")
+        file_exists = os.path.exists(path_to_local_file)
+
+        if use_local_data_copies and file_exists:
+            # tarball_fn= Path(f"{rootpath}/local_data_copies/pypsa-eur-data-bundle.tar.xz")
+            tarball_fn = path_to_local_file
+            # Path("local_data_copies/pypsa-eur-data-bundle.tar.xz")
+            url = tarball_fn
+            logger.info(f"Getting databundle locally from '{url}'.")
+            # progress_retrieve(url, tarball_fn)
+
+        else:
+            url = "https://zenodo.org/record/3517935/files/pypsa-eur-data-bundle.tar.xz"
+            tarball_fn = Path(f"{rootpath}/local_data_copies/pypsa-eur-data-bundle.tar.xz")
+
+
+            progress_retrieve(url, tarball_fn)
+            logger.info(f"Downloading databundle from '{url}'.")
+            if use_local_data_copies:
+                copyfile(tarball_fn, path_to_local_file)
+        # SVK edits end
+
+    # logger.info(f"Downloading databundle from '{url}'.")
+    # progress_retrieve(url, tarball_fn)
 
     logger.info(f"Extracting databundle.")
     tarfile.open(tarball_fn).extractall(to_fn)
 
-    tarball_fn.unlink()
+    # SVK edit (why would you delete it? delete = next time a new 1.6GB download)
+    # tarball_fn.unlink()
 
     logger.info(f"Databundle available in '{to_fn}'.")
+    print("in databundle!")

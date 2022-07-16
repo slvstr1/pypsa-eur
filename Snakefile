@@ -2,8 +2,20 @@
 #
 # SPDX-License-Identifier: MIT
 
+from icecream import ic
+import os
 from os.path import normpath, exists
 from shutil import copyfile, move
+from os.path import exists
+
+
+# import SVK_edits
+# ic(os.getcwd(''))
+# ic(os.chdir('./'))
+# print(f"getcwd: {os.getcwd()}")
+# print(f"os.chdir: {os.chdir('/')}")
+# pypsa_eur =  __import__('./pypsa-eur')
+# from SVK_edits.local_switch import use_local_data_copies
 
 from snakemake.remote.HTTP import RemoteProvider as HTTPRemoteProvider
 HTTP = HTTPRemoteProvider()
@@ -13,8 +25,32 @@ if not exists("config.yaml"):
 
 configfile: "config.yaml"
 
+use_local_data_copies = config['use_local_data_copies']
+if use_local_data_copies:
+    local_data_copies_path= config['local_data_copies_path_name']
+#     local_data_copies_path = Path("local_data_copies")
+    directory_exists = os.path.isdir(local_data_copies_path)
+    if not directory_exists:
+        os.makedirs(local_data_copies_path)
+        print(f"The new directory {local_data_copies_path} has been created")
+
 COSTS="data/costs.csv"
 ATLITE_NPROCESSES = config['atlite'].get('nprocesses', 4)
+
+print("because I dont fully understand snakemake, the local backups is done in a somewhat awkward, semi-automatic manner")
+print("you need to manually download the following files and put them in the folder local_data_copies")
+print("https://zenodo.org/record/3517935/files/pypsa-eur-data-bundle.tar.xz")
+print("https://sdi.eea.europa.eu/datashare/s/H6QGCybMdLLnywo/download")
+print("and unzip the zip archive 'eea_v_3035_100_k_natura2000_p_2020_v11_r00.zip'")
+print("and move the file 'Natura2000_end2020.gpkg' out of the archive inside the archive 'eea_v_3035_100_k_natura2000_p_2020_v11_r00'")
+
+print("https://data.open-power-system-data.org/time_series/2019-06-05/time_series_60min_singleindex.csv")
+
+print("https://zenodo.org/record/6382570/files/europe-2013-era5.nc")
+print("https://zenodo.org/record/6382570/files/europe-2013-sarah.nc")
+# print(f"config['BS']: {config['BS']}")
+# print(f"config['use_local_data_copies']:{config['use_local_data_copies']}")
+
 
 wildcard_constraints:
     simpl="[a-zA-Z0-9]*|all",
@@ -49,7 +85,7 @@ if config['enable'].get('prepare_links_p_nom', False):
 
 
 datafiles = ['ch_cantons.csv', 'je-e-21.03.02.xls', 
-            'eez/World_EEZ_v8_2014.shp', 
+            'eez/World_EEZ_v8_2014.shp',
             'hydro_capacities.csv', 'naturalearth/ne_10m_admin_0_countries.shp', 
             'NUTS_2013_60M_SH/data/NUTS_RG_60M_2013.shp', 'nama_10r_3popgdp.tsv.gz', 
             'nama_10r_3gdp.tsv.gz', 'corine/g250_clc06_V18_5.tif']
@@ -77,7 +113,7 @@ rule build_load_data:
     output: "resources/load.csv"
     log: "logs/build_load_data.log"
     script: 'scripts/build_load_data.py'
-    
+
 
 rule build_powerplants:
     input:
@@ -144,9 +180,10 @@ rule build_bus_regions:
     resources: mem_mb=1000
     script: "scripts/build_bus_regions.py"
 
+
 if config['enable'].get('build_cutout', False):
     rule build_cutout:
-        input: 
+        input:
             regions_onshore="resources/regions_onshore.geojson",
             regions_offshore="resources/regions_offshore.geojson"
         output: "cutouts/{cutout}.nc"
@@ -156,12 +193,31 @@ if config['enable'].get('build_cutout', False):
         resources: mem_mb=ATLITE_NPROCESSES * 1000
         script: "scripts/build_cutout.py"
 
-
+# cutouts_list = list(config['atlite']['cutouts'].keys())
+# print(f"cutouts_list:{cutouts_list}")
+# print("{cutout}.nc")
 if config['enable'].get('retrieve_cutout', True):
-    rule retrieve_cutout:
-        input: HTTP.remote("zenodo.org/record/6382570/files/{cutout}.nc", keep_local=True, static=True)
-        output: "cutouts/{cutout}.nc"
-        run: move(input[0], output[0])
+#     path_to_local_file= os.path.join(local_data_copies_path, "{cutout}.nc")
+#     file_exists = exists(path_to_local_file)
+    if not use_local_data_copies:
+        url = "zenodo.org/record/6382570/files/{cutout}.nc"
+#         url = "https://zenodo.org/record/6815967/files/frequent_bigrams.csv?download=1"
+        print("this is a long download: about 50min at 2mb/s")
+        rule retrieve_cutout:
+            input: HTTP.remote("zenodo.org/record/6382570/files/{cutout}.nc", keep_local=True, static=True)
+            output: "cutouts/{cutout}.nc"
+            run:
+#                 if use_local_data_copies:
+                copyfile(input[0], os.path.join(local_data_copies_path, "{cutout}.nc"))
+                move(input[0], output[0])
+
+    else:
+        rule retrieve_cutout:
+            input: os.path.join(local_data_copies_path, "{cutout}.nc")
+            output: "cutouts/{cutout}.nc"
+            run: copyfile(input[0], output[0])
+
+
 
 
 if config['enable'].get('build_natura_raster', False):
@@ -229,7 +285,7 @@ rule add_electricity:
         nuts3_shapes='resources/nuts3_shapes.geojson',
         **{f"profile_{tech}": f"resources/profile_{tech}.nc"
            for tech in config['renewable']},
-        **{f"conventional_{carrier}_{attr}": fn for carrier, d in config.get('conventional', {None: {}}).items() for attr, fn in d.items() if str(fn).startswith("data/")}, 
+        **{f"conventional_{carrier}_{attr}": fn for carrier, d in config.get('conventional', {None: {}}).items() for attr, fn in d.items() if str(fn).startswith("data/")},
     output: "networks/elec.nc"
     log: "logs/add_electricity.log"
     benchmark: "benchmarks/add_electricity"
