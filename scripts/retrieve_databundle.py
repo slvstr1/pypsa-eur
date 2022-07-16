@@ -70,8 +70,6 @@ if __name__ == "__main__":
     configure_logging(snakemake) # TODO Make logging compatible with progressbar (see PR #102)
 
 
-    use_local_data_copies = snakemake.config['use_local_data_copies']
-    local_data_copies_path= snakemake.config['local_data_copies_path_name']
 
     # Save locations
 

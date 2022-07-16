@@ -156,5 +156,6 @@ if __name__ == "__main__":
 
     if "clip_min_inflow" in config_hydro:
         inflow = inflow.where(inflow > config_hydro["clip_min_inflow"], 0)
-
+    ic.enable()
+    ic(snakemake.output[0])
     inflow.to_netcdf(snakemake.output[0])

@@ -309,11 +309,7 @@ if config['enable'].get('retrieve_cutout', True):
         rule retrieve_cutout:
             input: HTTP.remote("zenodo.org/record/6382570/files/{cutout}.nc", keep_local=True, static=True)
             output: "cutouts/{cutout}.nc"
-            run:
-#                 if use_local_data_copies:
-                copyfile(input[0], os.path.join(local_data_copies_path, "{cutout}.nc"))
-                move(input[0], output[0])
-
+            run: move(input[0], output[0])
     else:
         rule retrieve_cutout:
             input: path_to_local_file
