@@ -17,7 +17,7 @@ scenario:
   clusters: [5]
   opts: [Co2L-24H]
 
-countries: ['BE']
+countries: ['CZ']
 
 clustering:
   simplify:
@@ -25,7 +25,7 @@ clustering:
 
 snapshots:
   start: "2013-03-01"
-  end: "2013-04-01"
+  end: "2013-03-08"
   closed: 'left' # end is not inclusive
 
 enable:
@@ -37,7 +37,7 @@ enable:
 
 electricity:
   voltages: [220., 300., 380.]
-  co2limit: 100.e+6
+  co2limit: 1000.e+6
 
   extendable_carriers:
     Generator: [OCGT]
@@ -179,7 +179,7 @@ solving:
     skip_iterations: false
     track_iterations: false
   solver:
-    name: cbc
+    name: gurobi
 
 plotting:
   map:

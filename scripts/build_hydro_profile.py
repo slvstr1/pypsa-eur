@@ -65,6 +65,7 @@ from _helpers import configure_logging
 import atlite
 import geopandas as gpd
 from vresutils import hydro as vhydro
+from icecream import ic
 
 logger = logging.getLogger(__name__)
 
@@ -91,5 +92,6 @@ if __name__ == "__main__":
 
     if 'clip_min_inflow' in config_hydro:
         inflow = inflow.where(inflow > config_hydro['clip_min_inflow'], 0)
-
+    ic.enable()
+    ic(snakemake.output[0])
     inflow.to_netcdf(snakemake.output[0])
