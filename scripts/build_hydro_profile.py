@@ -64,6 +64,8 @@ from _helpers import configure_logging
 
 import atlite
 import geopandas as gpd
+from vresutils import hydro as vhydro
+from icecream import ic
 import pandas as pd
 
 import country_converter as coco
@@ -129,7 +131,7 @@ if __name__ == "__main__":
 
     fn = snakemake.input.eia_hydro_generation
     eia_stats = get_eia_annual_hydro_generation(fn, countries)
-    
+
     inflow = cutout.runoff(shapes=country_shapes,
                            smooth=True,
                            lower_threshold_quantile=True,
@@ -137,5 +139,6 @@ if __name__ == "__main__":
 
     if 'clip_min_inflow' in config_hydro:
         inflow = inflow.where(inflow > config_hydro['clip_min_inflow'], 0)
-
+    ic.enable()
+    ic(snakemake.output[0])
     inflow.to_netcdf(snakemake.output[0])
