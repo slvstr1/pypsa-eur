@@ -38,6 +38,21 @@ if use_local_data_copies:
 
 
 
+print("because I dont fully understand snakemake, the local backups is done in a somewhat awkward, semi-automatic manner")
+print("you need to manually download the following files and put them in the folder local_data_copies")
+print("https://zenodo.org/record/3517935/files/pypsa-eur-data-bundle.tar.xz")
+print("https://sdi.eea.europa.eu/datashare/s/H6QGCybMdLLnywo/download")
+print("and unzip the zip archive 'eea_v_3035_100_k_natura2000_p_2020_v11_r00.zip'")
+print("and move the file 'Natura2000_end2020.gpkg' out of the archive inside the archive 'eea_v_3035_100_k_natura2000_p_2020_v11_r00'")
+
+print("https://data.open-power-system-data.org/time_series/2019-06-05/time_series_60min_singleindex.csv")
+
+print("https://zenodo.org/record/6382570/files/europe-2013-era5.nc")
+print("https://zenodo.org/record/6382570/files/europe-2013-sarah.nc")
+# print(f"config['BS']: {config['BS']}")
+# print(f"config['use_local_data_copies']:{config['use_local_data_copies']}")
+
+
 wildcard_constraints:
     simpl="[a-zA-Z0-9]*|all",
     clusters="[0-9]+m?|all",
@@ -48,7 +63,8 @@ wildcard_constraints:
 rule cluster_all_networks:
     input:
         expand("networks/" + RDIR + "elec_s{simpl}_{clusters}.nc", **config["scenario"]),
-
+print("simpl: {simpl}")
+print("simpl: {clusters}")
 
 rule extra_components_all_networks:
     input:
@@ -142,9 +158,9 @@ if config["enable"].get("retrieve_databundle", True):
 
 
 
-path_to_file= os.path.join(local_data_copies_path, "time_series_60min_singleindex.csv")
-file_exists = exists(path_to_file)
-if not config['use_local_data_copies'] or not file_exists:
+path_to_local_file= os.path.join(local_data_copies_path, "time_series_60min_singleindex.csv")
+file_exists = exists(path_to_local_file)
+if not config['use_local_data_copies']:
     rule retrieve_load_data:
         input:
             HTTP.remote(
@@ -161,9 +177,9 @@ if not config['use_local_data_copies'] or not file_exists:
         if use_local_data_copies:
             copyfile(input[0], path_to_file)
 else:
-    print(f"retrieve_natura_data locally from {path_to_file}")
+    print(f"retrieve_natura_data locally from {path_to_local_file}")
     rule retrieve_load_data:
-        input: path_to_file
+        input: path_to_local_file
         output: "data/load_raw.csv"
         log: "logs/retrieve_load_data.log"
         run:
@@ -285,27 +301,16 @@ if config["enable"].get("build_cutout", False):
 
 
 if config['enable'].get('retrieve_cutout', True):
-    path_to_file= os.path.join(local_data_copies_path, "{cutout}.nc")
+    path_to_local_file= os.path.join(local_data_copies_path, "{cutout}.nc")
     file_exists = exists(path_to_file)
     if not use_local_data_copies or not file_exists:
         rule retrieve_cutout:
-                input:
-                    HTTP.remote(
-                        "zenodo.org/record/6382570/files/{cutout}.nc",
-                        keep_local=True,
-                        static=True,
-                    ),
-                output:
-                    "cutouts/" + CDIR + "{cutout}.nc",
-                log:
-                    "logs/" + CDIR + "retrieve_cutout_{cutout}.log",
-                resources:
-                    mem_mb=5000,
-                run:
-                    move(input[0], output[0])
+            input: HTTP.remote("zenodo.org/record/6382570/files/{cutout}.nc", keep_local=True, static=True)
+            output: "cutouts/{cutout}.nc"
+            run: move(input[0], output[0])
     else:
         rule retrieve_cutout:
-            input: path_to_file
+            input: path_to_local_file
             output: "cutouts/{cutout}.nc"
             run:
                 copyfile(input[0], output[0])

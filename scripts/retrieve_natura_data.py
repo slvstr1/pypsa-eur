@@ -36,8 +36,8 @@ if __name__ == "__main__":
         # print(snakemake.config)
         use_local_data_copies = snakemake.config['use_local_data_copies']
         local_data_copies_path = snakemake.config['local_data_copies_path_name']
-        path_to_file = join(local_data_copies_path, "pypsa-eur-data-bundle.tar.xz")
-        file_exists = exists(path_to_file)
+        path_to_local_file = join(local_data_copies_path, "pypsa-eur-data-bundle.tar.xz")
+        file_exists = exists(path_to_local_file)
         print(f'use_local_data_copies{use_local_data_copies}')
 
         if not use_local_data_copies or not file_exists:
@@ -45,9 +45,9 @@ if __name__ == "__main__":
             progress_retrieve(url, tarball_fn)
             logger.info(f"Downloading databundle from '{url}'.")
             if use_local_data_copies:
-                copyfile(tarball_fn, path_to_file)
+                copyfile(tarball_fn, path_to_local_file)
         else:
-            tarball_fn = path_to_file
+            tarball_fn = path_to_local_file
             url = tarball_fn
             logger.info(f"Getting databundle locally from '{url}'.")
 
