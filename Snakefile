@@ -32,14 +32,11 @@ if use_local_data_copies:
     directory_exists = os.path.isdir(local_data_copies_path)
     if not directory_exists:
         os.makedirs(local_data_copies_path)
-        log.info(f"The new directory {local_data_copies_path} has been created")
+        print(f"The new directory {local_data_copies_path} has been created")
 
 COSTS="data/costs.csv"
 ATLITE_NPROCESSES = config['atlite'].get('nprocesses', 4)
 
-
-# print(f"config['BS']: {config['BS']}")
-# print(f"config['use_local_data_copies']:{config['use_local_data_copies']}")
 
 
 wildcard_constraints:
@@ -47,17 +44,6 @@ wildcard_constraints:
     clusters="[0-9]+m?|all",
     ll="(v|c)([0-9\.]+|opt|all)|all",
     opts="[-+a-zA-Z0-9\.]*"
-
-# svk
-use_local_data_copies = config['use_local_data_copies']
-if use_local_data_copies:
-    local_data_copies_path= config['local_data_copies_path_name']
-#     local_data_copies_path = Path("local_data_copies")
-    directory_exists = os.path.isdir(local_data_copies_path)
-    if not directory_exists:
-        os.makedirs(local_data_copies_path)
-        print(f"The new directory {local_data_copies_path} has been created")
-
 
 
 print("because I dont fully understand snakemake, the local backups is done in a somewhat awkward, semi-automatic manner")
@@ -100,10 +86,10 @@ if config['enable'].get('prepare_links_p_nom', False):
         script: 'scripts/prepare_links_p_nom.py'
 
 
-datafiles = ['ch_cantons.csv', 'je-e-21.03.02.xls', 
-            'eez/World_EEZ_v8_2014.shp', 'EIA_hydro_generation_2000_2014.csv', 
-            'hydro_capacities.csv', 'naturalearth/ne_10m_admin_0_countries.shp', 
-            'NUTS_2013_60M_SH/data/NUTS_RG_60M_2013.shp', 'nama_10r_3popgdp.tsv.gz', 
+datafiles = ['ch_cantons.csv', 'je-e-21.03.02.xls',
+            'eez/World_EEZ_v8_2014.shp', 'EIA_hydro_generation_2000_2014.csv',
+            'hydro_capacities.csv', 'naturalearth/ne_10m_admin_0_countries.shp',
+            'NUTS_2013_60M_SH/data/NUTS_RG_60M_2013.shp', 'nama_10r_3popgdp.tsv.gz',
             'nama_10r_3gdp.tsv.gz', 'corine/g250_clc06_V18_5.tif']
 
 

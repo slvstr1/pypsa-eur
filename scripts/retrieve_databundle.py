@@ -72,15 +72,9 @@ if __name__ == "__main__":
 
         # SVK edits start
 
-
-
-
-
-
-        # SVK edits start
-
         path_to_local_file = os.path.join(local_data_copies_path, "pypsa-eur-data-bundle.tar.xz")
         file_exists = os.path.exists(path_to_local_file)
+
 
         if use_local_data_copies and file_exists:
             # tarball_fn= Path(f"{rootpath}/local_data_copies/pypsa-eur-data-bundle.tar.xz")
