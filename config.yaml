@@ -28,9 +28,9 @@ scenario:
 #countries: ['BE', 'BG', 'CH', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'ME', 'MK', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'SE', 'SI', 'SK']
 countries: ['CZ', 'DE','SK','AT','HU', 'PL']
 
-clustering:
-  simplify:
-    to_substations: false # network is simplified to nodes with positive or negative power injection (i.e. substations or offwind connections)
+#clustering:
+#  simplify:
+#    to_substations: false # network is simplified to nodes with positive or negative power injection (i.e. substations or offwind connections)
 
 snapshots:
   start: "2013-02-01"
@@ -83,8 +83,8 @@ atlite:
 #      y: [33., 72]
 #      x: [11.8, 20.]
 #      y: [48.1, 51]
-      x: [ 11.8, 11.81 ]
-      y: [ 48.1, 48.12 ]
+      x: [ 11.8, 11.801 ]
+      y: [ 48.1, 48.101 ]
       dx: 0.3
       dy: 0.3
       time: ['2013', '2013']
@@ -94,8 +94,8 @@ atlite:
 #      y: [33., 65]
 #      x: [11.8, 20.]
 #      y: [48.1, 51]
-      x: [ 11.8, 11.81 ]
-      y: [ 48.1, 48.12 ]
+      x: [ 11.8, 11.801 ]
+      y: [ 48.1, 48.101 ]
       dx: 0.2
       dy: 0.2
       time: ['2013', '2013']
@@ -214,9 +214,18 @@ load:
 
 costs:
   year: 2030
-  discountrate: 0.07 # From a Lion Hirth paper, also reflects average of Noothout et al 2016
-  USD2013_to_EUR2013: 0.7532 # [EUR/USD] ECB: https://www.ecb.europa.eu/stats/exchange/eurofxref/html/eurofxref-graph-usd.en.html
-  marginal_cost: # EUR/MWh
+  version: v0.1.0
+  rooftop_share: 0.14  # based on the potentials, assuming  (0.1 kW/m2 and 10 m2/person)
+  fill_values:
+    FOM: 0
+    VOM: 0
+    efficiency: 1
+    fuel: 0
+    investment: 0
+    lifetime: 25
+    "CO2 intensity": 0
+    "discount rate": 0.07
+  marginal_cost:
     solar: 0.01
     onwind: 0.015
     offwind: 0.015
@@ -228,6 +237,26 @@ costs:
     battery inverter: 0.
   emission_prices: # in currency per tonne emission, only used with the option Ep
     co2: 0.
+
+clustering:
+  simplify_network:
+    to_substations: false # network is simplified to nodes with positive or negative power injection (i.e. substations or offwind connections)
+    algorithm: kmeans # choose from: [hac, kmeans]
+    feature: solar+onwind-time # only for hac. choose from: [solar+onwind-time, solar+onwind-cap, solar-time, solar-cap, solar+offwind-cap] etc.
+  cluster_network:
+    algorithm: kmeans
+    feature: solar+onwind-time
+  aggregation_strategies:
+    generators:
+      p_nom_max: sum # use "min" for more conservative assumptions
+      p_nom_min: sum
+      p_min_pu: mean
+      marginal_cost: mean
+      committable: any
+      ramp_limit_up: max
+      ramp_limit_down: max
+      efficiency: mean
+
 
 solving:
   options:
