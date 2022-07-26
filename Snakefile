@@ -55,6 +55,8 @@ print("https://zenodo.org/record/6382570/files/europe-2013-sarah.nc")
 # print(f"config['BS']: {config['BS']}")
 # print(f"config['use_local_data_copies']:{config['use_local_data_copies']}")
 
+# rule download_all_dependancies:
+#     input:
 
 wildcard_constraints:
     simpl="[a-zA-Z0-9]*|all",
@@ -298,10 +300,16 @@ if config['enable'].get('build_natura_raster', False):
 
 
 if config['enable'].get('retrieve_natura_raster', True):
-    rule retrieve_natura_raster:
-        input: HTTP.remote("zenodo.org/record/4706686/files/natura.tiff", keep_local=True, static=True)
-        output: "resources/natura.tiff"
-        run: move(input[0], output[0])
+    if not use_local_data_copies:
+        rule retrieve_natura_raster:
+            input: HTTP.remote("zenodo.org/record/4706686/files/natura.tiff", keep_local=True, static=True)
+            output: "resources/natura.tiff"
+            run: move(input[0], output[0])
+    else:
+        rule retrieve_natura_raster:
+            input: os.path.join(local_data_copies_path, "natura.tiff")
+            output: "resources/natura.tiff"
+            run: copyfile(input[0], output[0])
 
 
 rule build_renewable_profiles:
