@@ -1,15 +1,12 @@
 # SPDX-FileCopyrightText: : 2017-2022 The PyPSA-Eur Authors
 #
 # SPDX-License-Identifier: MIT
-#  tmp = __import__('foo-bar')
-
-# import importlib
 
 from icecream import ic
 import os
 from os.path import normpath, exists
 from shutil import copyfile, move
-from os.path import exists
+
 
 
 # import SVK_edits
@@ -28,6 +25,17 @@ if not exists("config.yaml"):
 
 configfile: "config.yaml"
 
+COSTS="resources/costs.csv"
+# COSTS="data/costs.csv"
+ATLITE_NPROCESSES = config['atlite'].get('nprocesses', 4)
+
+wildcard_constraints:
+    simpl="[a-zA-Z0-9]*|all",
+    clusters="[0-9]+m?|all",
+    ll="(v|c)([0-9\.]+|opt|all)|all",
+    opts="[-+a-zA-Z0-9\.]*"
+
+# svk
 use_local_data_copies = config['use_local_data_copies']
 if use_local_data_copies:
     local_data_copies_path= config['local_data_copies_path_name']
@@ -37,9 +45,7 @@ if use_local_data_copies:
         os.makedirs(local_data_copies_path)
         print(f"The new directory {local_data_copies_path} has been created")
 
-COSTS="data/costs.csv"
-COSTS="resources/costs.csv"
-ATLITE_NPROCESSES = config['atlite'].get('nprocesses', 4)
+
 
 print("because I dont fully understand snakemake, the local backups is done in a somewhat awkward, semi-automatic manner")
 print("you need to manually download the following files and put them in the folder local_data_copies")
@@ -52,17 +58,7 @@ print("https://data.open-power-system-data.org/time_series/2019-06-05/time_serie
 
 print("https://zenodo.org/record/6382570/files/europe-2013-era5.nc")
 print("https://zenodo.org/record/6382570/files/europe-2013-sarah.nc")
-# print(f"config['BS']: {config['BS']}")
-# print(f"config['use_local_data_copies']:{config['use_local_data_copies']}")
 
-# rule download_all_dependancies:
-#     input:
-
-wildcard_constraints:
-    simpl="[a-zA-Z0-9]*|all",
-    clusters="[0-9]+m?|all",
-    ll="(v|c)([0-9\.]+|opt|all)|all",
-    opts="[-+a-zA-Z0-9\.]*"
 
 
 rule cluster_all_networks:
@@ -113,29 +109,11 @@ if config['enable'].get('retrieve_databundle', True):
         log: "logs/retrieve_databundle.log"
         script: 'scripts/retrieve_databundle.py'
 
-
-path_to_local_file= os.path.join(local_data_copies_path, "Natura2000_end2020.gpkg")
-file_exists = exists(path_to_local_file)
-if not use_local_data_copies:
-#     print("retrieve_natura_datawr")
-    rule retrieve_natura_data:
-        input: HTTP.remote("sdi.eea.europa.eu/datashare/s/H6QGCybMdLLnywo/download", additional_request_string="?path=%2FNatura2000_end2020_gpkg&files=Natura2000_end2020.gpkg", static=True)
-        output: "data/Natura2000_end2020.gpkg"
-        log: "logs/retrieve_natura_data.log"
-        run:
-#             if use_local_data_copies:
-            copyfile(input[0], path_to_local_file)
-            move(input[0], output[0])
-
-else:
-    print(f"retrieve_natura_data locally from {path_to_file}")
-    rule retrieve_natura_data:
-        input: path_to_local_file
-        output: "data/Natura2000_end2020.gpkg"
-        log: "logs/retrieve_natura_data.log"
-        run:
-            copyfile(input[0], output[0])
-
+#PyPSA
+# rule retrieve_load_data:
+#     input: HTTP.remote("data.open-power-system-data.org/time_series/2019-06-05/time_series_60min_singleindex.csv", keep_local=True, static=True)
+#     output: "data/load_raw.csv"
+#     run: move(input[0], output[0])
 
 
 
@@ -150,14 +128,6 @@ if not config['use_local_data_copies']:
 #             if config['use_local_data_copies']:
             copyfile(input, path_to_local_file)
             move(input[0], output[0])
-
-rule retrieve_load_data:
-    input: HTTP.remote("data.open-power-system-data.org/time_series/2019-06-05/time_series_60min_singleindex.csv", keep_local=True, static=True)
-    output: "data/load_raw.csv"
-    log: "logs/retrieve_load_data.log"
-    run:   move(input[0], output[0])
-    if use_local_data_copies:
-        copyfile(input[0], path_to_file)
 else:
     print(f"retrieve_natura_data locally from {path_to_local_file}")
     rule retrieve_load_data:
@@ -168,12 +138,12 @@ else:
             copyfile(input[0], output[0])
 
 
-
 rule build_load_data:
     input: "data/load_raw.csv"
     output: "resources/load.csv"
     log: "logs/build_load_data.log"
     script: 'scripts/build_load_data.py'
+
 
 
 rule build_powerplants:
@@ -262,7 +232,6 @@ if config['enable'].get('retrieve_cutout', True):
 #     file_exists = exists(path_to_local_file)
     if not use_local_data_copies:
         url = "zenodo.org/record/6382570/files/{cutout}.nc"
-#         url = "https://zenodo.org/record/6815967/files/frequent_bigrams.csv?download=1"
         print("this is a long download: about 50min at 2mb/s")
         rule retrieve_cutout:
             input: HTTP.remote("zenodo.org/record/6382570/files/{cutout}.nc", keep_local=True, static=True)
@@ -278,16 +247,14 @@ if config['enable'].get('retrieve_cutout', True):
             output: "cutouts/{cutout}.nc"
             run: copyfile(input[0], output[0])
 
-    rule retrieve_cutout:
-        input: HTTP.remote("zenodo.org/record/6382570/files/{cutout}.nc", keep_local=True, static=True)
-        output: "cutouts/{cutout}.nc"
-        run: move(input[0], output[0])
+
 
 if config['enable'].get('retrieve_cost_data', True):
     rule retrieve_cost_data:
         input: HTTP.remote(f"raw.githubusercontent.com/PyPSA/technology-data/{config['costs']['version']}/outputs/costs_{config['costs']['year']}.csv", keep_local=True)
         output: COSTS
         run: move(input[0], output[0])
+
 
 if config['enable'].get('build_natura_raster', False):
     rule build_natura_raster:
@@ -299,17 +266,33 @@ if config['enable'].get('build_natura_raster', False):
         script: "scripts/build_natura_raster.py"
 
 
-if config['enable'].get('retrieve_natura_raster', True):
-    if not use_local_data_copies:
-        rule retrieve_natura_raster:
-            input: HTTP.remote("zenodo.org/record/4706686/files/natura.tiff", keep_local=True, static=True)
-            output: "resources/natura.tiff"
-            run: move(input[0], output[0])
-    else:
-        rule retrieve_natura_raster:
-            input: os.path.join(local_data_copies_path, "natura.tiff")
-            output: "resources/natura.tiff"
-            run: copyfile(input[0], output[0])
+# PyPSA
+# if config['enable'].get('retrieve_natura_raster', True):
+#         rule retrieve_natura_raster:
+#             input: HTTP.remote("zenodo.org/record/4706686/files/natura.tiff", keep_local=True, static=True)
+#             output: "resources/natura.tiff"
+#             run: move(input[0], output[0])
+
+
+path_to_local_file= os.path.join(local_data_copies_path, "natura.tiff")
+file_exists = exists(path_to_local_file)
+if not use_local_data_copies:
+#     print("retrieve_natura_datawr")
+    rule retrieve_natura_data:
+        input: HTTP.remote("zenodo.org/record/4706686/files/natura.tiff", keep_local=True, static=True)
+        output: "resources/natura.tiff"
+        run:
+#             if use_local_data_copies:
+            copyfile(input[0], path_to_local_file)
+            move(input[0], output[0])
+
+else:
+    print(f"retrieve_natura_data locally from {path_to_file}")
+    rule retrieve_natura_data:
+        input: path_to_local_file
+        output: "resources/natura.tiff"
+        run:
+            copyfile(input[0], output[0])
 
 
 rule retrieve_ship_raster:
@@ -340,30 +323,6 @@ rule build_renewable_profiles:
                          else []),
         ship_density= lambda w: ("resources/shipdensity_raster.nc"
                          if "ship_threshold" in config["renewable"][w.technology].keys()
-                         else []),
-        country_shapes='resources/country_shapes.geojson',
-        offshore_shapes='resources/offshore_shapes.geojson',
-        regions=lambda w: ("resources/regions_onshore.geojson"
-                                   if w.technology in ('onwind', 'solar')
-                                   else "resources/regions_offshore.geojson"),
-        cutout=lambda w: "cutouts/" + config["renewable"][w.technology]['cutout'] + ".nc"
-    output: profile="resources/profile_{technology}.nc",
-    log: "logs/build_renewable_profile_{technology}.log"
-    benchmark: "benchmarks/build_renewable_profiles_{technology}"
-    threads: ATLITE_NPROCESSES
-    resources: mem_mb=ATLITE_NPROCESSES * 5000
-    wildcard_constraints: technology="(?!hydro).*" # Any technology other than hydro
-    script: "scripts/build_renewable_profiles.py"
-
-rule build_renewable_profiles:
-    input:
-        base_network="networks/base.nc",
-        corine="data/bundle/corine/g250_clc06_V18_5.tif",
-        natura=lambda w: ("data/Natura2000_end2020.gpkg"
-                          if config["renewable"][w.technology]["natura"]
-                          else []),
-        gebco=lambda w: ("data/bundle/GEBCO_2014_2D.nc"
-                         if "max_depth" in config["renewable"][w.technology].keys()
                          else []),
         country_shapes='resources/country_shapes.geojson',
         offshore_shapes='resources/offshore_shapes.geojson',
