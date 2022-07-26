@@ -25,3 +25,9 @@ doc/_build
 config.yaml
 
 dconf
+/local_data_copies/eea_v_3035_100_k_natura2000_p_2020_v11_r00.zip
+/local_data_copies/europe-2013-era5.nc
+/local_data_copies/europe-2013-sarah.nc
+/local_data_copies/Natura2000_end2020.gpkg
+/local_data_copies/pypsa-eur-data-bundle.tar.xz
+/local_data_copies/time_series_60min_singleindex.csv
