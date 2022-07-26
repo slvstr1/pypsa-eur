@@ -174,8 +174,8 @@ if not config['use_local_data_copies']:
             mem_mb=5000,
         run:
             move(input[0], output[0])
-        if use_local_data_copies:
-            copyfile(input[0], path_to_file)
+            if use_local_data_copies:
+                copyfile(input[0], path_to_file)
 else:
     print(f"retrieve_natura_data locally from {path_to_local_file}")
     rule retrieve_load_data:
@@ -302,12 +302,16 @@ if config["enable"].get("build_cutout", False):
 
 if config['enable'].get('retrieve_cutout', True):
     path_to_local_file= os.path.join(local_data_copies_path, "{cutout}.nc")
-    file_exists = exists(path_to_file)
+    file_exists = exists(path_to_local_file)
     if not use_local_data_copies or not file_exists:
         rule retrieve_cutout:
             input: HTTP.remote("zenodo.org/record/6382570/files/{cutout}.nc", keep_local=True, static=True)
             output: "cutouts/{cutout}.nc"
-            run: move(input[0], output[0])
+            run:
+#                 if use_local_data_copies:
+                copyfile(input[0], os.path.join(local_data_copies_path, "{cutout}.nc"))
+                move(input[0], output[0])
+
     else:
         rule retrieve_cutout:
             input: path_to_local_file
@@ -353,7 +357,8 @@ if config["enable"].get("build_natura_raster", False):
         script:
             "scripts/build_natura_raster.py"
 
-
+path_to_local_file= os.path.join(local_data_copies_path, "natura.tiff")
+file_exists = exists(path_to_local_file)
 if config["enable"].get("retrieve_natura_raster", True):
     if not use_local_data_copies:
         rule retrieve_natura_raster:
@@ -370,10 +375,15 @@ if config["enable"].get("retrieve_natura_raster", True):
                 run:
                     move(input[0], output[0])
     else:
-        rule retrieve_natura_raster:
-            input: os.path.join(local_data_copies_path, "natura.tiff")
+        print(f"retrieve_natura_data locally from {path_to_file}")
+        rule retrieve_natura_data:
+            input: path_to_local_file
             output: "resources/natura.tiff"
-            run: copyfile(input[0], output[0])
+            run:
+                copyfile(input[0], output[0])
+
+
+
 
 
 rule retrieve_ship_raster:
