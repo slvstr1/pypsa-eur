@@ -73,6 +73,48 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="/doc/configtables/hydro.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/doc/configtables/lines.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/doc/configtables/offwind-ac.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/doc/configtables/offwind-dc.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/doc/configtables/onwind.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/doc/configtables/opts.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="/doc/configtables/solar.csv">
           <value>
             <Attribute>
@@ -81,6 +123,48 @@
           </value>
         </entry>
         <entry key="/doc/configtables/toplevel.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/doc/configtables/transformers.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="$USER_HOME$/miniconda3/envs/pypsa-eur/lib/python3.9/site-packages/pypsa/component_attrs/buses.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="$USER_HOME$/miniconda3/envs/pypsa-eur/lib/python3.9/site-packages/pypsa/component_attrs/lines.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="$USER_HOME$/miniconda3/envs/pypsa-eur/lib/python3.9/site-packages/pypsa/component_attrs/networks.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="$USER_HOME$/miniconda3/envs/pypsa-eur/lib/python3.9/site-packages/pypsa/component_attrs/transformers.csv">
+          <value>
+            <Attribute>
+              <option name="separator" value="," />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="/resources/costs.csv">
           <value>
             <Attribute>
               <option name="separator" value="," />
