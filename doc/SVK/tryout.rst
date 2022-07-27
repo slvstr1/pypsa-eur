@@ -9,7 +9,8 @@ Download into the folder "local_data copies"
     print("https://zenodo.org/record/6382570/files/europe-2013-era5.nc")
     print("https://zenodo.org/record/6382570/files/europe-2013-sarah.nc")
 
-run "snakemake -j 8 results/networks/elec_s_212_ec_lv1_1H.nc"
+run "snakemake -j 4 results/networks/elec_s_212_ec_lv1_1H.nc"
+(5 minutes on my desktop machine!!! - probably somewhat more on yours - maybe 10~20?)
 
 run jupyter notebook
     There, go to folder "ipynb_checkpoints"
