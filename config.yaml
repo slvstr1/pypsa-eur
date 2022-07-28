@@ -41,8 +41,9 @@ enable:
   prepare_links_p_nom: false
   retrieve_databundle: true
   build_cutout: false
-  retrieve_cutout: true
+  retrieve_cutout: false
   custom_busmap: false
+  build_natura_raster: false
 
 electricity:
   voltages: [220., 300., 380.]
