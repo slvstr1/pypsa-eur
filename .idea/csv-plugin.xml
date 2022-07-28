@@ -3,13 +3,6 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
-        <entry key="/data.open-power-system-data.org/time_series/2019-06-05/time_series_60min_singleindex.csv">
-          <value>
-            <Attribute>
-              <option name="separator" value="," />
-            </Attribute>
-          </value>
-        </entry>
         <entry key="/data/bundle/NUTS_2013_60M_SH/data/NUTS_AT_2013.csv">
           <value>
             <Attribute>
