@@ -34,7 +34,9 @@ if use_local_data_copies:
         os.makedirs(local_data_copies_path)
         print(f"The new directory {local_data_copies_path} has been created")
 
-COSTS="data/costs.csv"
+
+COSTS="resources/costs.csv"
+# COSTS="data/costs.csv"
 ATLITE_NPROCESSES = config['atlite'].get('nprocesses', 4)
 
 
@@ -86,8 +88,13 @@ if config['enable'].get('prepare_links_p_nom', False):
         script: 'scripts/prepare_links_p_nom.py'
 
 
+# datafiles = ['ch_cantons.csv', 'je-e-21.03.02.xls',
+#             'eez/World_EEZ_v8_2014.shp', 'EIA_hydro_generation_2000_2014.csv',
+#             'hydro_capacities.csv', 'naturalearth/ne_10m_admin_0_countries.shp',
+#             'NUTS_2013_60M_SH/data/NUTS_RG_60M_2013.shp', 'nama_10r_3popgdp.tsv.gz',
+
 datafiles = ['ch_cantons.csv', 'je-e-21.03.02.xls',
-            'eez/World_EEZ_v8_2014.shp', 'EIA_hydro_generation_2000_2014.csv',
+            'eez/World_EEZ_v8_2014.shp',
             'hydro_capacities.csv', 'naturalearth/ne_10m_admin_0_countries.shp',
             'NUTS_2013_60M_SH/data/NUTS_RG_60M_2013.shp', 'nama_10r_3popgdp.tsv.gz',
             'nama_10r_3gdp.tsv.gz', 'corine/g250_clc06_V18_5.tif']

@@ -125,6 +125,8 @@ import logging
 from _helpers import configure_logging, update_p_nom_max, get_aggregation_strategies
 
 import pypsa
+import os
+import shapely
 
 import pandas as pd
 import numpy as np
@@ -137,7 +139,6 @@ from functools import reduce
 
 from pypsa.networkclustering import (busmap_by_kmeans, busmap_by_hac,
                                      busmap_by_greedy_modularity, get_clustering_from_busmap)
-
 import warnings
 warnings.filterwarnings(action='ignore', category=UserWarning)
 
