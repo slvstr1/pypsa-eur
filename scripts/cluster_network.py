@@ -127,7 +127,7 @@ from _helpers import configure_logging, update_p_nom_max, get_aggregation_strate
 import pypsa
 import os
 import shapely
-
+from icecream import ic
 import pandas as pd
 import numpy as np
 import geopandas as gpd
@@ -138,7 +138,7 @@ import seaborn as sns
 from functools import reduce
 
 from pypsa.networkclustering import (busmap_by_kmeans, busmap_by_hac,
-                                     # busmap_by_greedy_modularity,
+                                     busmap_by_greedy_modularity,
                                      get_clustering_from_busmap)
 import warnings
 warnings.filterwarnings(action='ignore', category=UserWarning)
@@ -184,7 +184,7 @@ def get_feature_for_hac(n, buses_i=None, feature=None):
     carriers = feature.split('-')[0].split('+')
     if "offwind" in carriers:
         carriers.remove("offwind")
-        carriers = np.append(carriers, network.generators.carrier.filter(like='offwind').unique())
+        carriers = np.append(carriers, n.generators.carrier.filter(like='offwind').unique())
 
     if feature.split('-')[1] == 'cap':
         feature_data = pd.DataFrame(index=buses_i, columns=carriers)
@@ -335,6 +335,28 @@ def clustering_for_n_clusters(n, n_clusters, custom_busmap=False, aggregate_carr
         busmap = busmap_for_n_clusters(n, n_clusters, solver_name, focus_weights, algorithm, feature)
     else:
         busmap = custom_busmap
+    ic(busmap)
+    ic(type(busmap))
+    ic(busmap.size)
+    ic(busmap.values)
+
+    """
+    START - This maximizes the nodes in CZ
+    """
+    cz_bool = list('CZ0' in elta for elta in busmap)
+    indices = busmap[cz_bool].index
+    for c, i in enumerate(indices):
+        busmap[i] = f"CZ0 {c}"
+
+    ic(busmap)
+    ic(type(busmap))
+    ic(busmap.size)
+    ic(busmap.values)
+    busmap.to_pickle("./busmap.pkl")
+    """
+    END - This maximizes the nodes in CZ
+    """
+
 
     clustering = get_clustering_from_busmap(
         n, busmap,

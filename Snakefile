@@ -483,10 +483,10 @@ rule solve_operations_network:
     log:
         solver=normpath("logs/solve_operations_network/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_op_solver.log"),
         python="logs/solve_operations_network/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_op_python.log",
-        memory="logs/solve_operations_network/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_op_memory.log"
+        memory=5 * "logs/solve_operations_network/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_op_memory.log"
     benchmark: "benchmarks/solve_operations_network/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}"
     threads: 4
-    resources: mem_mb=(lambda w: 5000 + 372 * int(w.clusters))
+    resources: mem_mb=(lambda w: 15000 + 372 * int(w.clusters))
     shadow: "minimal"
     script: "scripts/solve_operations_network.py"
 
