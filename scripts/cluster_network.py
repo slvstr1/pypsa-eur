@@ -140,7 +140,7 @@ from pypsa.networkclustering import (
     busmap_by_kmeans,
     get_clustering_from_busmap,
 )
-
+from icecream import ic
 warnings.filterwarnings(action="ignore", category=UserWarning)
 
 from add_electricity import load_costs
@@ -408,6 +408,28 @@ def clustering_for_n_clusters(
         )
     else:
         busmap = custom_busmap
+    ic(busmap)
+    ic(type(busmap))
+    ic(busmap.size)
+    ic(busmap.values)
+
+    """
+    START - This maximizes the nodes in CZ
+    """
+    cz_bool = list('CZ0' in elta for elta in busmap)
+    indices = busmap[cz_bool].index
+    for c, i in enumerate(indices):
+        busmap[i] = f"CZ0 {c}"
+
+    ic(busmap)
+    ic(type(busmap))
+    ic(busmap.size)
+    ic(busmap.values)
+    busmap.to_pickle("./busmap.pkl")
+    """
+    END - This maximizes the nodes in CZ
+    """
+
 
     clustering = get_clustering_from_busmap(
         n,

@@ -26,7 +26,7 @@ scenario:
   opts: [3H]
 
 #countries: ['BE', 'BG', 'CH', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GB', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'ME', 'MK', 'NL', 'NO', 'PL', 'PT', 'RO', 'RS', 'SE', 'SI', 'SK']
-countries: ['CZ', 'DE','SK','AT','HU', 'PL']
+countries: ['CZ', 'DE','SK','AT','HU', 'PL', 'NL','BE','IT','RO','FR', 'CH', 'SI','HR']
 
 
 snapshots:
@@ -284,10 +284,10 @@ clustering:
 solving:
   options:
     formulation: kirchhoff
-    load_shedding: false
+    load_shedding: true
     noisy_costs: true
     min_iterations: 4
-    max_iterations: 6
+    max_iterations: 60
     clip_p_max_pu: 0.01
     skip_iterations: false
     track_iterations: false
