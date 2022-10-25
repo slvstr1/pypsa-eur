@@ -135,7 +135,7 @@ import pypsa
 import seaborn as sns
 from _helpers import configure_logging, get_aggregation_strategies, update_p_nom_max
 from pypsa.networkclustering import (
-    busmap_by_greedy_modularity,
+    # busmap_by_greedy_modularity,
     busmap_by_hac,
     busmap_by_kmeans,
     get_clustering_from_busmap,

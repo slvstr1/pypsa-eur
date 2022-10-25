@@ -373,7 +373,7 @@ if config["enable"].get("retrieve_natura_raster", True):
                 run:
                     move(input[0], output[0])
     else:
-        print(f"retrieve_natura_data locally from {path_to_file}")
+        print(f"retrieve_natura_data locally from {path_to_local_file}")
         rule retrieve_natura_data:
             input: path_to_local_file
             output: "resources/natura.tiff"
