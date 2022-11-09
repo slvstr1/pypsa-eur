@@ -1,0 +1,17 @@
+load:
+  power_statistics: True # only for files from <2019; set false in order to get ENTSOE transparency data
+  interpolate_limit: 3 # data gaps up until this size are interpolated linearly
+  time_shift_for_large_gaps: 1w # data gaps up until this size are copied by copying from
+  manual_adjustments: true # false
+  scaling_factor: 1.0
+
+Changed to
+
+load:
+  power_statistics: False # only for files from <2019; set false in order to get ENTSOE transparency data
+  interpolate_limit: 7 # data gaps up until this size are interpolated linearly
+  time_shift_for_large_gaps: 1w # data gaps up until this size are copied by copying from
+  manual_adjustments: true # false
+  scaling_factor: 1.0
+
+

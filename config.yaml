@@ -30,8 +30,8 @@ countries: ['CZ', 'DE','SK','AT','HU', 'PL', 'NL','BE','IT','RO','FR', 'CH', 'SI
 
 
 snapshots:
-  start: "2013-02-01"
-  end: "2013-02-03"
+  start: "2019-02-01"
+  end: "2019-02-28"
   closed: 'left' # end is not inclusive
 
 enable:
@@ -228,9 +228,10 @@ transformers:
   s_nom: 2000.
   type: ''
 
+#Edits by RAs - Changed power_statistics to False; Changed interpolate limits from 3 to 7
 load:
-  power_statistics: True # only for files from <2019; set false in order to get ENTSOE transparency data
-  interpolate_limit: 3 # data gaps up until this size are interpolated linearly
+  power_statistics: False # only for files from <2019; set false in order to get ENTSOE transparency data
+  interpolate_limit: 7 # data gaps up until this size are interpolated linearly
   time_shift_for_large_gaps: 1w # data gaps up until this size are copied by copying from
   manual_adjustments: true # false
   scaling_factor: 1.0
@@ -293,8 +294,8 @@ solving:
     track_iterations: false
     #nhours: 10
   solver:
-#    name: gurobi
-    name: cbc
+    name: gurobi
+#    name: cbc
     threads: 4
     method: 2 # barrier
     crossover: 0
