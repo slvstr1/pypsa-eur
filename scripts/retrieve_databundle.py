@@ -99,8 +99,8 @@ if __name__ == "__main__":
 
             progress_retrieve(url, tarball_fn)
             logger.info(f"Downloading databundle from '{url}'.")
-            if use_local_data_copies:
-                copyfile(tarball_fn, path_to_local_file)
+            # if use_local_data_copies:
+            #     copyfile(tarball_fn, path_to_local_file)
         # SVK edits end
 
     # logger.info(f"Downloading databundle from '{url}'.")

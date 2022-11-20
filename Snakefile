@@ -5,10 +5,10 @@
 # import importlib
 
 from icecream import ic
-import os
+import os, logging
 from os.path import normpath, exists
 from shutil import copyfile, move
-
+log = logging.getLogger(__name__)
 from snakemake.remote.HTTP import RemoteProvider as HTTPRemoteProvider
 
 HTTP = HTTPRemoteProvider()
