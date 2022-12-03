@@ -30,8 +30,8 @@ countries: ['CZ', 'DE','SK','AT','HU', 'PL', 'NL','BE','IT','RO','FR', 'CH', 'SI
 
 
 snapshots:
-  start: "2019-02-01"
-  end: "2019-02-28"
+  start: "2019-01-01"
+  end: "2020-01-01"
   closed: 'left' # end is not inclusive
 
 enable:
