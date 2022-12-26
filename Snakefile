@@ -166,7 +166,7 @@ if not config['use_local_data_copies']:
     rule retrieve_load_data:
         input:
             HTTP.remote(
-                "data.open-power-system-data.org/time_series/2019-06-05/time_series_60min_singleindex.csv",
+                "data.open-power-system-data.org/time_series/2020-10-06/time_series_60min_singleindex.csv", #changing 2019-06-05 to 2020-10-06
                 keep_local=True,
                 static=True,
             ),
