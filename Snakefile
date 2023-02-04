@@ -98,7 +98,7 @@ if config["enable"].get("prepare_links_p_nom", False):
             "logs/" + RDIR + "prepare_links_p_nom.log",
         threads: 1
         resources:
-            mem_mb=500,
+            mem_mb=1500,
         script:
             "scripts/prepare_links_p_nom.py"
 
@@ -238,7 +238,7 @@ rule base_network:
         "benchmarks/" + RDIR + "base_network"
     threads: 1
     resources:
-        mem_mb=500,
+        mem_mb=1500,
     script:
         "scripts/base_network.py"
 
@@ -261,7 +261,7 @@ rule build_shapes:
         "logs/" + RDIR + "build_shapes.log",
     threads: 1
     resources:
-        mem_mb=500,
+        mem_mb=1500,
     script:
         "scripts/build_shapes.py"
 
@@ -740,7 +740,7 @@ rule make_summary:
         + RDIR
         + "make_summary/elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{country}.log",
     resources:
-        mem_mb=500,
+        mem_mb=1500,
     script:
         "scripts/make_summary.py"
 
@@ -759,7 +759,7 @@ rule plot_summary:
         + RDIR
         + "plot_summary/{summary}_elec_s{simpl}_{clusters}_ec_l{ll}_{opts}_{country}_{ext}.log",
     resources:
-        mem_mb=500,
+        mem_mb=1500,
     script:
         "scripts/plot_summary.py"
 
@@ -789,6 +789,6 @@ rule plot_p_nom_max:
         + RDIR
         + "plot_p_nom_max/elec_s{simpl}_{clusts}_{techs}_{country}_{ext}.log",
     resources:
-        mem_mb=500,
+        mem_mb=1500,
     script:
         "scripts/plot_p_nom_max.py"
